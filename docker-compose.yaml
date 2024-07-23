@@ -1,0 +1,34 @@
+services:
+  haproxy:
+    image: haproxy
+    volumes:
+    - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    - ./coraza.cfg:/usr/local/etc/haproxy/coraza.cfg:ro
+    depends_on:
+    - coraza
+    networks:
+      app_net:
+  coraza:
+    image: ghcr.io/corazawaf/coraza-spoa:main-crs4
+    networks:
+      app_net:
+  client:
+    image: curlimages/curl
+    command:
+    - sh
+    - -c
+    - |
+      curl -fsSL --max-time 1 -6 "http://haproxy"
+    depends_on:
+    - haproxy
+    networks:
+      app_net:
+networks:
+  app_net:
+    enable_ipv6: true
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 2001:3200:3200::/64
+          gateway: 2001:3200:3200::1
